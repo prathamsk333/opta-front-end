@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-mapboxgl.accessToken = 'pk.eyJ1IjoicHJhdGhhbXNrIiwiYSI6ImNsemI0Y3lkczBwODYycXNhdnRtcmNpNXgifQ.jb72CnbhadnnADNWkl3NJQ';
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX || "";
 
 interface MapBoxMapProps {
   onClose: () => void;
