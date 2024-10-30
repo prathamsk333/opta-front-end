@@ -241,7 +241,7 @@ export default function Component() {
           </div>
         </div>
       </div>
-      {showMap && <ShowAddressSelector data="true" addLocation={true} />}
+      {showMap && <ShowAddressSelector addLocation={true} />}
     </div>
   );
 }

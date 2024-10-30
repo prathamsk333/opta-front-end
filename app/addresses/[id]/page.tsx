@@ -104,7 +104,13 @@ export default function AddressDetails() {
       });
   };
 
-  const handleSuggestionClick = (suggestion: any) => {
+  interface Suggestion {
+    center: [number, number];
+    place_name: string;
+    id: string;
+  }
+
+  const handleSuggestionClick = (suggestion: Suggestion) => {
     const coordinates = suggestion.center;
     setCoordinates(coordinates);
     setAddress(suggestion.place_name);
@@ -207,35 +213,35 @@ export default function AddressDetails() {
           <div className="relative">
             <div className="flex items-center space-x-2">
               <Input
-                type="text"
-                value={address}
-                onChange={(e) => {
-                  setAddress(e.target.value);
-                  setIsTyping(true);
-                  handleMapSearch(e.target.value);
-                }}
-                placeholder="Search for an address"
-                className="flex-grow"
+          type="text"
+          value={address}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setAddress(e.target.value);
+            setIsTyping(true);
+            handleMapSearch(e.target.value);
+          }}
+          placeholder="Search for an address"
+          className="flex-grow"
               />
               <Button
-                onClick={() => handleMapSearch(address)}
-                variant="outline"
-                className="bg-red-600 text-white hover:bg-red-700"
+          onClick={() => handleMapSearch(address)}
+          variant="outline"
+          className="bg-red-600 text-white hover:bg-red-700"
               >
-                <Search className="w-4 h-4 mr-2" /> Search
+          <Search className="w-4 h-4 mr-2" /> Search
               </Button>
             </div>
             {suggestions.length > 0 && (
               <ul className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-56 overflow-auto">
-                {suggestions.map((suggestion: any) => (
-                  <li
-                    key={suggestion.id}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  >
-                    {suggestion.place_name}
-                  </li>
-                ))}
+          {suggestions.map((suggestion: Suggestion) => (
+            <li
+              key={suggestion.id}
+              className="p-2 hover:bg-gray-100 cursor-pointer"
+              onClick={() => handleSuggestionClick(suggestion)}
+            >
+              {suggestion.place_name}
+            </li>
+          ))}
               </ul>
             )}
           </div>
@@ -249,19 +255,19 @@ export default function AddressDetails() {
             <Input
               type="text"
               value={street}
-              onChange={(e) => setStreet(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStreet(e.target.value)}
               placeholder="Street name"
               className="flex-grow"
             />
-            <Select value={addressType} onValueChange={setAddressType}>
+            <Select value={addressType} onValueChange={(value: string) => setAddressType(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Address type" />
+          <SelectValue placeholder="Address type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="home">Home</SelectItem>
-                <SelectItem value="office">Office</SelectItem>
-                <SelectItem value="friends">Friends</SelectItem>
-                <SelectItem value="family">Family</SelectItem>
+          <SelectItem value="home">Home</SelectItem>
+          <SelectItem value="office">Office</SelectItem>
+          <SelectItem value="friends">Friends</SelectItem>
+          <SelectItem value="family">Family</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -269,7 +275,7 @@ export default function AddressDetails() {
           <Input
             type="text"
             value={houseDetails}
-            onChange={(e) => setHouseDetails(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHouseDetails(e.target.value)}
             placeholder="House details (e.g. flat, apartment)"
             className="flex-grow"
           />

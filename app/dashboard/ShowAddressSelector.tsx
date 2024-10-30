@@ -4,14 +4,12 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MapBoxMap from "../locationHandlers/MapBoxMap";
 import DeliveryAddress from "../locationHandlers/DeliveryAddress";
-import { ShoppingCart, MapPin } from "lucide-react";
 
 interface DataType {
-  data: String;
   addLocation: boolean;
 }
 
-export default function ShowAddressSelector({ data, addLocation }: DataType) {
+export default function ShowAddressSelector({ addLocation }: DataType) {
   const [showLocationPopup, setShowLocationPopup] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(false);

@@ -88,7 +88,6 @@ export async function saveAddress(data) {
 }
 
 export async function getCurrentAddress() {
-  try { 
     const token = getToken();
     let auth;
     if (token) {
@@ -102,10 +101,10 @@ export async function getCurrentAddress() {
       {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",                 
+          "Content-Type": "application/json",
           Authorization: `${auth}`,
         },
-        credentials: "include",   
+        credentials: "include",
       }
     );
 
@@ -119,13 +118,9 @@ export async function getCurrentAddress() {
     const result = await response.json();
 
     return result;
-  } catch (error) {
-    throw error;
-  }
 }
 
 export async function fetchSavedLocations() {
-  try { 
     const token = getToken();
     let auth;
     if (token) {
@@ -139,10 +134,10 @@ export async function fetchSavedLocations() {
       {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",                 
+          "Content-Type": "application/json",
           Authorization: `${auth}`,
         },
-        credentials: "include",   
+        credentials: "include",
       }
     );
 
@@ -156,46 +151,39 @@ export async function fetchSavedLocations() {
     const result = await response.json();
 
     return result;
-  } catch (error) {
-    throw error;
-  }
 }
 
 export async function getAddressDetails(id) {
-  try { 
-    const token = getToken();
-    let auth;
-    if (token) {
-      auth = `Bearer ${token}`;
-    } else {
-      auth = " ";
+  const token = getToken();
+  let auth;
+  if (token) {
+    auth = `Bearer ${token}`;
+  } else {
+    auth = " ";
+  }
+
+  const response = await fetch(
+    `http://localhost:5000/api/v1/address/getAddressDetails/${id}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${auth}`,
+      },
+      credentials: "include",
     }
+  );
 
-    const response = await fetch(
-      `http://localhost:5000/api/v1/address/getAddressDetails/${id}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",                 
-          Authorization: `${auth}`,
-        },
-        credentials: "include",   
-      }
-    );
-
-    if (!response.ok) {
-      const errorInfo = await response.json();
-      const error = new Error("An error occurred while fetching bookings");
-      error.status = response.status;
-      error.info = errorInfo;
-      throw error;
-    }
-    const result = await response.json();
-
-    return result;
-  } catch (error) {
+  if (!response.ok) {
+    const errorInfo = await response.json();
+    const error = new Error("An error occurred while fetching bookings");
+    error.status = response.status;
+    error.info = errorInfo;
     throw error;
   }
+  const result = await response.json();
+
+  return result;
 }
 export async function updateAddress(id, data) {
   try {

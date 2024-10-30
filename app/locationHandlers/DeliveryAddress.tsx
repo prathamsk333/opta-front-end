@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,32 +14,39 @@ import { useMutation } from "@tanstack/react-query";
 interface AddressConfirmationProps {
   selectedAddress: {
     coordinates: [number, number] | null;
+
     address: string;
   };
+
   onSaveAddress: (addressDetails: {
     fullAddress: {
       coordinates: [number, number] | null;
       address: string;
     };
+
     houseNumber: string;
+
     street: string;
+
     saveAs: string;
   }) => void;
+
   onBack: () => void;
 }
-
 interface IAddress {
   coordinates: [number, number] | null;
   address: string;
 }
 
-export default function Component({ selectedAddress, onSaveAddress, onBack }: AddressConfirmationProps) {
+export default function AddressConfirmation({
+  selectedAddress,
+  onSaveAddress,
+  onBack,
+}: AddressConfirmationProps) {
   const [houseNumber, setHouseNumber] = useState("");
   const [street, setStreet] = useState("");
   const [saveAs, setSaveAs] = useState("home");
   const [message, setMessage] = useState<JSX.Element | null>(null);
-  const [houseNumberError, setHouseNumberError] = useState("");
-  const [streetError, setStreetError] = useState("");
 
   interface ExtendedFormData extends FormData {
     coordinates: [number, number] | null;
@@ -52,14 +60,6 @@ export default function Component({ selectedAddress, onSaveAddress, onBack }: Ad
     mutationFn: saveAddress,
     onError: (error) => {
       console.error("Error saving address:", error);
-      setMessage(
-        <div className="fixed z-50">
-          <Notification
-            message="An error occurred while saving your address."
-            status="error"
-          />
-        </div>
-      );
     },
     onSuccess: () => {
       setMessage(
@@ -73,43 +73,23 @@ export default function Component({ selectedAddress, onSaveAddress, onBack }: Ad
     },
   });
 
-  const validateInputs = () => {
-    let isValid = true;
-    
-    if (!houseNumber.trim()) {
-      setHouseNumberError("House number cannot be empty");
-      isValid = false;
-    } else {
-      setHouseNumberError("");
-    }
-
-    if (!street.trim()) {
-      setStreetError("Street cannot be empty");
-      isValid = false;
-    } else {
-      setStreetError("");
-    }
-
-    return isValid;
-  };
-
   const handleSaveAddress = () => {
-    if (validateInputs()) {
-      onSaveAddress({
-        fullAddress: selectedAddress,
-        houseNumber,
-        street,
-        saveAs,
-      });
+    console.log(selectedAddress, " ", houseNumber, " ", street, " ", saveAs);
+    onSaveAddress({
+      fullAddress: selectedAddress,
+      houseNumber,
+      street,
+      saveAs,
+    });
 
-      const formData = new FormData() as ExtendedFormData;
-      formData.coordinates = selectedAddress.coordinates;
-      formData.address = selectedAddress.address;
-      formData.houseDetails = houseNumber;
-      formData.street = street;
-      formData.addressType = saveAs;
-      mutate(formData);
-    }
+    const formData = new FormData() as ExtendedFormData;
+    formData.coordinates = selectedAddress.coordinates;
+    formData.address = selectedAddress.address;
+    formData.houseDetails = houseNumber;
+    formData.street = street;
+    formData.addressType = saveAs;
+    console.log(formData.coordinates)
+    mutate(formData);
   };
 
   return (
@@ -131,9 +111,7 @@ export default function Component({ selectedAddress, onSaveAddress, onBack }: Ad
             value={houseNumber}
             onChange={(e) => setHouseNumber(e.target.value)}
             placeholder="Enter house/flat/block number"
-            className={houseNumberError ? "border-red-500" : ""}
           />
-          {houseNumberError && <p className="text-red-500 text-sm mt-1">{houseNumberError}</p>}
         </div>
 
         <div>
@@ -143,9 +121,7 @@ export default function Component({ selectedAddress, onSaveAddress, onBack }: Ad
             value={street}
             onChange={(e) => setStreet(e.target.value)}
             placeholder="Enter apartment/road/area"
-            className={streetError ? "border-red-500" : ""}
           />
-          {streetError && <p className="text-red-500 text-sm mt-1">{streetError}</p>}
         </div>
 
         <div>
@@ -231,9 +207,7 @@ export default function Component({ selectedAddress, onSaveAddress, onBack }: Ad
         <Button variant="outline" onClick={onBack}>
           Back
         </Button>
-        <Button onClick={handleSaveAddress} disabled={isPending}>
-          {isPending ? "Saving..." : "Save Address"}
-        </Button>
+        <Button onClick={handleSaveAddress}>Save Address</Button>
       </div>
     </div>
   );

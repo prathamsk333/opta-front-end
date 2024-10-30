@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ShoppingCart, MapPin } from "lucide-react";
 import { images, products } from "../utils/productImages";
 import { getCurrentAddress } from "../utils/http";
@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import ShowAddressSelector from "./ShowAddressSelector";
 
 interface Address {
-  data: String;
+  data: string;
 }
 
 export default function Home() {
@@ -37,7 +37,7 @@ export default function Home() {
     } else router.push("/login");
   }, []);
 
-  const { data, isLoading, error } = useQuery<{ currentAddress: Address }>({
+  const { data, error } = useQuery<{ currentAddress: Address }>({
     queryKey: ["address"],
     queryFn: getCurrentAddress,
   });
@@ -138,7 +138,7 @@ export default function Home() {
         </div>
       </footer>
       {showLocationPopup && (
-        <ShowAddressSelector data={data ? data.currentAddress.data : ""} addLocation={false}/>
+        <ShowAddressSelector  addLocation={false}/>
       )}
     </div>
   );
