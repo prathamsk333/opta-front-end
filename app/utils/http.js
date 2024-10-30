@@ -2,7 +2,7 @@ import getToken from "./getToken";
 
 export async function signUpPOST(credentials) {
   try {
-    const response = await fetch("http://localhost:5000/api/v1/users/signup", {
+    const response = await fetch("https://optaend.prathamsk.me/api/v1/users/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -26,7 +26,7 @@ export async function signUpPOST(credentials) {
 }
 
 export async function loginPOST(credentials) {
-  const response = await fetch("http://localhost:5000/api/v1/users/login", {
+  const response = await fetch("https://optaend.prathamsk.me/api/v1/users/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -58,7 +58,7 @@ export async function saveAddress(data) {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/v1/address/saveAddress`,
+      `https://optaend.prathamsk.me/api/v1/address/saveAddress`,
       {
         method: "POST",
         headers: {
@@ -97,7 +97,7 @@ export async function getCurrentAddress() {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/v1/address/getCurrentAddress`,
+      `https://optaend.prathamsk.me/api/v1/address/getCurrentAddress`,
       {
         method: "GET",
         headers: {
@@ -130,7 +130,7 @@ export async function fetchSavedLocations() {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/v1/address/getSavedAddresses`,
+      `https://optaend.prathamsk.me/api/v1/address/getSavedAddresses`,
       {
         method: "GET",
         headers: {
@@ -163,7 +163,7 @@ export async function getAddressDetails(id) {
   }
 
   const response = await fetch(
-    `http://localhost:5000/api/v1/address/getAddressDetails/${id}`,
+    `https://optaend.prathamsk.me/api/v1/address/getAddressDetails/${id}`,
     {
       method: "GET",
       headers: {
@@ -196,7 +196,7 @@ export async function updateAddress(id, data) {
     }
 
     const response = await fetch(
-      `http://localhost:5000/api/v1/address/updateAddress/${id}`,
+      `https://optaend.prathamsk.me/api/v1/address/updateAddress/${id}`,
       {
         method: "PUT",
         headers: {
