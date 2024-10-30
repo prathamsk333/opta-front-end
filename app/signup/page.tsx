@@ -36,7 +36,7 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (data) {
-      router.push("/pageChange");
+      router.push("/dashboard");
     }
   }, [data, dispatch]);
 
@@ -50,17 +50,17 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#e6faf8]">
+    <div className="min-h-screen flex items-center justify-center bg-red-50">
       {isError && (
         <Notification message="please enter valid data" status="error" />
       )}
       {data && <Notification message="Login successful" status="success" />}
       <div className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-[#40ceb8] mb-2">
-          Sign up for SchedulEase
+        <h1 className="text-3xl font-bold text-center text-red-600 mb-2">
+          Log in to Opta Express
         </h1>
         <p className="text-center text-gray-600 mb-6">
-          Create an account to manage your appointments
+          manage your locations and addressess
         </p>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -150,7 +150,7 @@ export default function SignUpPage() {
 
           <Button
             type="submit"
-            className="w-full bg-[#40ceb8] hover:bg-[#3bbaA6] text-white py-2 rounded-md transition duration-300"
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md transition duration-300"
             disabled={isPending}
           >
             {isPending ? "Signing Up..." : "Sign Up"}
@@ -159,7 +159,7 @@ export default function SignUpPage() {
 
         <p className="text-center mt-6">
           Already have an account?{" "}
-          <Link href="/login" className="text-[#40ceb8] hover:underline">
+          <Link href="/login" className="text-red-600 hover:underline">
             Log in
           </Link>
         </p>

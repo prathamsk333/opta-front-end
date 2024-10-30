@@ -1,5 +1,4 @@
 import getToken from "./getToken";
-import axios from "axios";
 
 export async function signUpPOST(credentials) {
   try {
@@ -158,6 +157,81 @@ export async function fetchSavedLocations() {
 
     return result;
   } catch (error) {
+    throw error;
+  }
+}
+
+export async function getAddressDetails(id) {
+  try { 
+    const token = getToken();
+    let auth;
+    if (token) {
+      auth = `Bearer ${token}`;
+    } else {
+      auth = " ";
+    }
+
+    const response = await fetch(
+      `http://localhost:5000/api/v1/address/getAddressDetails/${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",                 
+          Authorization: `${auth}`,
+        },
+        credentials: "include",   
+      }
+    );
+
+    if (!response.ok) {
+      const errorInfo = await response.json();
+      const error = new Error("An error occurred while fetching bookings");
+      error.status = response.status;
+      error.info = errorInfo;
+      throw error;
+    }
+    const result = await response.json();
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+}
+export async function updateAddress(id, data) {
+  try {
+    const token = getToken();
+    let auth;
+    if (token) {
+      auth = `Bearer ${token}`;
+    } else {
+      auth = " ";
+    }
+
+    const response = await fetch(
+      `http://localhost:5000/api/v1/address/updateAddress/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${auth}`,
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      }
+    );
+
+    if (!response.ok) {
+      const errorInfo = await response.json();
+      const error = new Error("An error occurred while updating the address");
+      error.status = response.status;
+      error.info = errorInfo;
+      throw error;
+    }
+    const result = await response.json();
+
+    return result;
+  } catch (error) {
+    console.error("Error during address update:", error);
     throw error;
   }
 }

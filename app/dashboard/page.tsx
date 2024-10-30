@@ -4,11 +4,13 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, MapPin } from "lucide-react";
 import { images, products } from "../utils/productImages";
-import MapBoxMap from "../locationHandlers/MapBoxMap";
-import DeliveryAddress from "../locationHandlers/DeliveryAddress";
 import { getCurrentAddress } from "../utils/http";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import getToken from "../utils/getToken";
+import { jwtDecode } from "jwt-decode";
+import { useRouter } from "next/navigation";
+import ShowAddressSelector from "./ShowAddressSelector";
 
 interface Address {
   data: String;
@@ -17,15 +19,23 @@ interface Address {
 export default function Home() {
   const [currentImage, setCurrentImage] = useState(0);
   const [showLocationPopup, setShowLocationPopup] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{
-    coordinates: [number, number] | null;
-    address: string;
-  }>({
-    coordinates: null,
-    address: "",
-  });
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = getToken();
+    console.log(token);
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+
+      if (decodedToken.exp && decodedToken.exp < currentTime) {
+        router.push("/login");
+      } else {
+        console.log("Token is valid");
+      }
+    } else router.push("/login");
+  }, []);
 
   const { data, isLoading, error } = useQuery<{ currentAddress: Address }>({
     queryKey: ["address"],
@@ -42,8 +52,6 @@ export default function Home() {
   useEffect(() => {
     if (data) {
       setShowLocationPopup(false);
-      setShowMap(false);
-      setCurrentLocation(true);
     }
   }, [data]);
 
@@ -54,65 +62,6 @@ export default function Home() {
 
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (typeof navigator !== "undefined" && "permissions" in navigator) {
-      navigator.permissions.query({ name: "geolocation" }).then((result) => {
-        if (
-          result.state === "prompt" ||
-          (result.state === "denied" && !currentLocation)
-        ) {
-          setShowLocationPopup(true);
-        } else if (result.state === "granted") {
-          setShowLocationPopup(false);
-        }
-      });
-    }
-  }, []);
-
-  const handleLocationSelect = (coords: [number, number], address: string) => {
-    setSelectedLocation({ coordinates: coords, address });
-    setShowMap(false);
-  };
-
-  const handleAllowLocation = async () => {
-    if (typeof navigator !== "undefined" && "geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          setTimeout(() => {
-            setShowLocationPopup(false);
-          }, 6000);
-
-          const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX;
-          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxToken}`;
-
-          try {
-            const response = await fetch(url);
-            const data = await response.json();
-            const address = data.features[0]?.place_name;
-            console.log("Address:", address);
-            setSelectedLocation({
-              coordinates: [longitude, latitude],
-              address,
-            });
-          } catch (error) {
-            console.error("Error fetching address:", error);
-          }
-        },
-        (error) => {
-          console.error("Error accessing location:", error);
-          setShowLocationPopup(true);
-        }
-      );
-    }
-  };
-
-  const handleClosePopup = () => {
-    setShowLocationPopup(false);
-    setShowMap(true);
-  };
-
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <header className="bg-white text-red-600 py-4 shadow-md">
@@ -121,7 +70,10 @@ export default function Home() {
           <nav>
             <ul className="flex space-x-6 items-center">
               <li>
-                <Link href="/addresses" className="hover:text-red-700 flex items-center">
+                <Link
+                  href="/addresses"
+                  className="hover:text-red-700 flex items-center"
+                >
                   <MapPin className="mr-1 h-4 w-4" /> Addresses
                 </Link>
               </li>
@@ -185,92 +137,9 @@ export default function Home() {
           <p>&copy; 2023 Opta Express. All rights reserved.</p>
         </div>
       </footer>
-
-      <AnimatePresence>
-        {showLocationPopup && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full"
-            >
-              <div className="text-center">
-                <h3 className="text-2xl font-bold text-red-600 mb-4">
-                  Enable Location Services
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Allow Opta Express to access your location for a personalized
-                  shopping experience and accurate delivery estimates.
-                </p>
-                <div className="flex flex-col space-y-3">
-                  <button
-                    onClick={handleAllowLocation}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors duration-300"
-                  >
-                    Allow Location
-                  </button>
-                  <button
-                    onClick={handleClosePopup}
-                    className="w-full px-4 py-2 border border-red-600 text-red-600 rounded-md hover:bg-red-50 transition-colors duration-300"
-                  >
-                    Update Manually
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showMap && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          >
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl h-[500px] overflow-hidden relative">
-              <button
-                onClick={() => setShowMap(false)}
-                className="absolute top-4 right-4 bg-red-600 text-white rounded-full p-2"
-              >
-                <span className="sr-only">Close Map</span>X
-              </button>
-              <MapBoxMap
-                onClose={() => console.log("Map closed")}
-                coordinates={[78.9629, 20.5937]}
-                onProceed={handleLocationSelect}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {selectedLocation.coordinates && !currentLocation && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          >
-            <DeliveryAddress
-              selectedAddress={selectedLocation}
-              onSaveAddress={() => setCurrentLocation(true)}
-              onBack={() => {
-                setShowMap(true);
-                setSelectedLocation({ coordinates: null, address: "" });
-              }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showLocationPopup && (
+        <ShowAddressSelector data={data ? data.currentAddress.data : ""} addLocation={false}/>
+      )}
     </div>
   );
 }

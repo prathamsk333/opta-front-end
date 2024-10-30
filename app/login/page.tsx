@@ -1,61 +1,61 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { FormEvent, useState, useEffect, ChangeEvent } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { setUser, setError } from "../store/userslice";
-import { useDispatch } from "react-redux";
-import Cookies from "js-cookie";
-import { loginPOST } from "../utils/http";
-import { useRouter } from "next/navigation";
-import Notification from "../utils/notification";
+import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { FormEvent, useState, useEffect, ChangeEvent } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { setUser, setError } from "../store/userslice"
+import { useDispatch } from "react-redux"
+import Cookies from "js-cookie"
+import { loginPOST } from "../utils/http"
+import { useRouter } from "next/navigation"
+import Notification from "../utils/notification"
 
 export default function Component() {
-  const router = useRouter();
-  const dispatch = useDispatch();
+  const router = useRouter()
+  const dispatch = useDispatch()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-  });
+  })
 
   const { mutate, data, isPending, isError, error } = useMutation({
     mutationFn: loginPOST,
     onSuccess: (data) => {
-      Cookies.set("token", data.token, { expires: 7, path: "/" });
-      dispatch(setUser(data));
+      Cookies.set("token", data.token, { expires: 7, path: "/" })
+      dispatch(setUser(data))
     },
     onError: (error) => {
-      dispatch(setError(error.message));
+      dispatch(setError(error.message))
     },
-  });
+  })
 
   useEffect(() => {
     if (data) {
-      router.push("/");
+      router.push("/dashboard")
     }
-  }, [data, dispatch]);
+  }, [data, dispatch, router])
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    mutate(formData);
+    e.preventDefault()
+    mutate(formData)
   }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
+    setFormData({ ...formData, [e.target.id]: e.target.value })
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#e6faf8]">
+    <div className="min-h-screen flex items-center justify-center bg-red-50">
       {isError && <Notification message={error.message} status="error" />}
       {data && <Notification message="Login successful" status="success" />}
       <div className="bg-white p-8 rounded-3xl shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-[#40ceb8] mb-2">
-          Log in to SchedulEase
+        <h1 className="text-3xl font-bold text-center text-red-600 mb-2">
+          Log in to Opta Express
         </h1>
         <p className="text-center text-gray-600 mb-6">
-          manage your appointments with Ease
+          manage your locations and addressess
         </p>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
@@ -95,7 +95,7 @@ export default function Component() {
 
           <Button
             type="submit"
-            className="w-full bg-[#40ceb8] hover:bg-[#3bbaA6] text-white py-2 rounded-md transition duration-300"
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-md transition duration-300"
             disabled={isPending}
           >
             {isPending ? "Logging In..." : "Log In"}
@@ -103,12 +103,12 @@ export default function Component() {
         </form>
 
         <p className="text-center mt-6">
-          Don&apos;t have an account?
-          <Link href="/signup" className="text-[#40ceb8] hover:underline">
+          Don&apos;t have an account?{' '}
+          <Link href="/signup" className="text-red-600 hover:underline">
             Sign up
           </Link>
         </p>
       </div>
     </div>
-  );
+  )
 }

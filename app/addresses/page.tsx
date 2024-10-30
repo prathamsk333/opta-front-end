@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { fetchSavedLocations } from "../utils/http";
+import { useRouter } from "next/navigation";
+import ShowAddressSelector from "../dashboard/ShowAddressSelector";
 
 interface Location {
   _id: string;
@@ -23,226 +25,199 @@ interface Location {
   street: string;
   addressType: string;
   userId: string;
-  __v: number;
+  recentlyUsed: string;
 }
 
-interface ComponentProps {
-  onBack?: () => void;
-  onAddAddress?: () => void;
-}
-
-// Mock API functions - replace with actual API calls
-const fetchRecentSearches = async () => {
-  return [
-    {
-      id: 1,
-      name: "Wadala West",
-      address:
-        "near Shitla Devi Mandir, Chembur Colony, Chembur, Mumbai, Maharashtra, India",
-    },
-    {
-      id: 2,
-      name: "Chembur East",
-      address:
-        "near Shitla Devi Mandir, Chembur Colony, Chembur, Mumbai, Maharashtra, India",
-    },
-    {
-      id: 3,
-      name: "Wadala East",
-      address:
-        "near Shitla Devi Mandir, Chembur Colony, Chembur, Mumbai, Maharashtra, India",
-    },
-  ];
-};
-
-export default function Component({ onBack, onAddAddress }: ComponentProps) {
+export default function Component() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showMap, setShowMap] = useState(false);
+  const router = useRouter();
 
   const {
     data: savedLocationsResponse,
-    isLoading: isLoadingSaved,
-    isError: isErrorSaved,
+    isLoading,
+    isError,
   } = useQuery({
     queryKey: ["savedLocations"],
     queryFn: fetchSavedLocations,
   });
 
-  const {
-    data: recentSearches,
-    isLoading: isLoadingRecent,
-    isError: isErrorRecent,
-  } = useQuery({
-    queryKey: ["recentSearches"],
-    queryFn: fetchRecentSearches,
-  });
+  const onAddAddress = () => {
+    setShowMap(true);
+  };
 
-  const savedLocation = savedLocationsResponse?.data?.currentAddress;
+  const savedLocations: Location[] =
+    savedLocationsResponse?.data?.currentAddress || [];
+
+  const recentSearches = savedLocations.filter(
+    (location) => location.recentlyUsed
+  );
 
   const getLocationIcon = (type: string) => {
     switch (type) {
       case "home":
-        return <Home className="relative top-1 h-5 w-5" />;
+        return <Home className="h-5 w-5" />;
       case "office":
-        return <Briefcase className="relative top-1 h-5 w-5" />;
+        return <Briefcase className="h-5 w-5" />;
       case "friends":
-        return <Users className="relative top-1 h-5 w-5" />;
+        return <Users className="h-5 w-5" />;
       default:
-        return <Heart className="relative top-1 h-5 w-5" />;
+        return <Heart className="h-5 w-5" />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-[1200px] px-4 py-6 md:py-12">
-        <div className="mx-auto max-w-3xl">
-          <div className="overflow-hidden rounded-xl bg-white shadow-lg">
-            {/* Header */}
-            <div className="bg-red-600 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {onBack && (
-                    <button
-                      onClick={onBack}
-                      className="flex items-center justify-center rounded-full p-1 text-white transition-colors hover:bg-red-500"
-                      aria-label="Go back"
-                    >
-                      <ArrowLeft className="h-6 w-6" />
-                    </button>
-                  )}
-                  <h1 className="text-2xl font-semibold text-white">
-                    Your Location
-                  </h1>
-                </div>
-                {onAddAddress && (
-                  <button
-                    onClick={onAddAddress}
-                    className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Address
-                  </button>
-                )}
-              </div>
+    <div className="min-h-screen bg-gray-100">
+      <div className="mx-auto max-w-3xl px-4 py-6 md:py-12">
+        <div className="overflow-hidden rounded-xl bg-white shadow-lg">
+          {/* Header */}
+          <div className="bg-red-600 px-4 py-4 sm:px-6">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="rounded-full p-2 text-white hover:bg-red-500 transition-colors"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </button>
+              <h1 className="text-xl font-semibold text-white sm:text-2xl">
+                Your Location
+              </h1>
+              <button
+                onClick={onAddAddress}
+                className="flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Add Address</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-6 p-4 sm:p-6">
+            {/* Search Bar */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search your area/pincode/apartment"
+                className="h-12 w-full rounded-lg border pl-10 pr-4 text-lg outline-none focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
 
-            {/* Content */}
-            <div className="space-y-8 p-6">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search your area/pincode/apartment"
-                  className="h-12 w-full rounded-lg border border-gray-200 pl-10 pr-4 text-lg outline-none transition-colors placeholder:text-gray-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              {/* Saved Locations */}
-              <div>
-                <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                  Saved Location
-                </h2>
-                {isLoadingSaved ? (
-                  <div className="h-24 animate-pulse rounded-lg bg-gray-100" />
-                ) : isErrorSaved ? (
-                  <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-center text-sm text-red-600">
-                    Failed to load saved locations. Please try again later.
-                  </div>
-                ) : !savedLocation ? (
-                  <div className="rounded-lg border border-gray-100 bg-gray-50 p-6 text-center">
-                    <MapPin className="mx-auto h-8 w-8 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-500">
-                      No saved addresses found
-                    </p>
-                    {onAddAddress && (
-                      <button
-                        onClick={onAddAddress}
-                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add New Address
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid gap-3">
-                    <button className="group w-full rounded-lg border border-gray-100 bg-white p-4 text-left transition-all hover:border-red-100 hover:bg-red-50">
-                      <div className="flex items-start gap-4">
-                        <div className="text-red-600">
-                          {getLocationIcon(savedLocation.addressType)}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <h3 className="text-lg font-semibold capitalize text-gray-900">
-                            {savedLocation.addressType}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {savedLocation.address}
-                          </p>
-                        </div>
-                        <ArrowRight className="h-5 w-5 text-red-600 opacity-0 transition-all duration-200 ease-in-out group-hover:opacity-100" />
+            {/* Saved Locations */}
+            <div>
+              <h2 className="mb-4 text-xl font-semibold text-gray-900">
+                Saved Location
+              </h2>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((n) => (
+                    <div
+                      key={n}
+                      className="h-20 animate-pulse rounded-lg bg-gray-100"
+                    />
+                  ))}
+                </div>
+              ) : isError ? (
+                <div className="rounded-lg bg-red-50 p-4 text-center text-sm text-red-600">
+                  Failed to load saved locations. Please try again later.
+                </div>
+              ) : savedLocations.length === 0 ? (
+                <div className="rounded-lg bg-gray-50 p-6 text-center">
+                  <MapPin className="mx-auto h-8 w-8 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-500">
+                    No saved addresses found
+                  </p>
+                  <button
+                    onClick={onAddAddress}
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add New Address
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {savedLocations.map((location) => (
+                    <button
+                      key={location._id}
+                      onClick={()=>{router.push(`/addresses/${location._id}`);}}
+                      className="group flex w-full items-start gap-4 rounded-lg border bg-white p-4 text-left hover:bg-red-50 transition-colors"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
+                        {getLocationIcon(location.addressType)}
                       </div>
+                      <div className="flex-grow">
+                        <h3 className="text-lg font-semibold capitalize">
+                          {location.addressType}
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">
+                          {location.address}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-5 w-5 flex-shrink-0 text-red-600 opacity-0 transition-opacity group-hover:opacity-100" />
                     </button>
-                  </div>
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              <div className="my-6 h-px bg-gray-100" />
+            <div className="h-px bg-gray-200" />
 
-              {/* Recent Searches */}
-              <div>
-                <h2 className="mb-4 text-xl font-semibold text-gray-900">
-                  Recent Searches
-                </h2>
-                {isLoadingRecent ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((n) => (
-                      <div
-                        key={n}
-                        className="h-24 animate-pulse rounded-lg bg-gray-100"
-                      />
-                    ))}
-                  </div>
-                ) : isErrorRecent ? (
-                  <div className="rounded-lg border border-red-100 bg-red-50 p-4 text-center text-sm text-red-600">
-                    Failed to load recent searches. Please try again later.
-                  </div>
-                ) : !recentSearches?.length ? (
-                  <div className="rounded-lg border border-gray-100 bg-gray-50 p-6 text-center">
-                    <Search className="mx-auto h-8 w-8 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-500">
-                      No recent searches found
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-3">
-                    {recentSearches.map((search) => (
-                      <button
-                        key={search.id}
-                        className="group w-full rounded-lg border border-gray-100 bg-white p-4 text-left transition-all hover:border-red-100 hover:bg-red-50"
-                      >
-                        <div className="flex items-start gap-4">
-                          <MapPin className="h-5 w-5 text-red-600" />
-                          <div className="flex-1 space-y-1">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {search.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {search.address}
-                            </p>
-                          </div>
-                          <ArrowRight className="h-5 w-5 text-red-600 opacity-0 transition-all duration-200 ease-in-out group-hover:opacity-100" />
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {/* Recent Searches */}
+            <div>
+              <h2 className="mb-4 text-xl font-semibold">Recent Searches</h2>
+              {isLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((n) => (
+                    <div
+                      key={n}
+                      className="h-20 animate-pulse rounded-lg bg-gray-100"
+                    />
+                  ))}
+                </div>
+              ) : isError ? (
+                <div className="rounded-lg bg-red-50 p-4 text-center text-sm text-red-600">
+                  Failed to load recent searches. Please try again later.
+                </div>
+              ) : recentSearches.length === 0 ? (
+                <div className="rounded-lg bg-gray-50 p-6 text-center">
+                  <Search className="mx-auto h-8 w-8 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-500">
+                    No recent searches found
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentSearches.map((search) => (
+                    <button
+                      key={search._id}
+                      className="group flex w-full items-start gap-4 rounded-lg border bg-white p-4 text-left hover:bg-red-50 transition-colors"
+                    >
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
+                        <MapPin className="h-5 w-5" />
+                      </div>
+                      <div className="flex-grow">
+                        <h3 className="text-lg font-semibold line-clamp-1">
+                          {search.address}
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-500 line-clamp-1">
+                          {search.street}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-5 w-5 flex-shrink-0 text-red-600 opacity-0 transition-opacity group-hover:opacity-100" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+      {showMap && <ShowAddressSelector data="true" addLocation={true} />}
     </div>
   );
 }
