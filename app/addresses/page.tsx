@@ -12,10 +12,13 @@ import {
   ArrowLeft,
   Plus,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchSavedLocations } from "../utils/http";
 import { useRouter } from "next/navigation";
 import ShowAddressSelector from "../dashboard/ShowAddressSelector";
+import getToken from "../utils/getToken";
+import { jwtDecode } from "jwt-decode";
+
 
 interface Location {
   _id: string;
@@ -32,6 +35,21 @@ export default function Component() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showMap, setShowMap] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const token = getToken();
+    console.log(token);
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      const currentTime = Math.floor(Date.now() / 1000);
+
+      if (decodedToken.exp && decodedToken.exp < currentTime) {
+        router.push("/login");
+      } else {
+        console.log("Token is valid");
+      }
+    } else router.push("/login");
+  }, []);
 
   const {
     data: savedLocationsResponse,
@@ -51,6 +69,10 @@ export default function Component() {
 
   const recentSearches = savedLocations.filter(
     (location) => location.recentlyUsed
+  );
+
+  const filteredLocations = savedLocations.filter((location) =>
+    location.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getLocationIcon = (type: string) => {
@@ -125,7 +147,7 @@ export default function Component() {
                 <div className="rounded-lg bg-red-50 p-4 text-center text-sm text-red-600">
                   Failed to load saved locations. Please try again later.
                 </div>
-              ) : savedLocations.length === 0 ? (
+              ) : filteredLocations.length === 0 ? (
                 <div className="rounded-lg bg-gray-50 p-6 text-center">
                   <MapPin className="mx-auto h-8 w-8 text-gray-400" />
                   <p className="mt-2 text-sm text-gray-500">
@@ -141,10 +163,12 @@ export default function Component() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {savedLocations.map((location) => (
+                  {filteredLocations.map((location) => (
                     <button
                       key={location._id}
-                      onClick={()=>{router.push(`/addresses/${location._id}`);}}
+                      onClick={() => {
+                        router.push(`/addresses/${location._id}`);
+                      }}
                       className="group flex w-full items-start gap-4 rounded-lg border bg-white p-4 text-left hover:bg-red-50 transition-colors"
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600">
