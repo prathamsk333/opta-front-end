@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, notFound } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { MapPin, Search, Star } from "lucide-react";
-import { getAddressDetails, updateAddress } from "../../utils/http";
+import { getAddressDetails, updateAddress, deleteAddress } from "../../utils/http";
+import Loading from "../../utils/Loading";
+import Notification from "@/app/utils/notification";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX || "";
 
@@ -55,6 +57,9 @@ export default function AddressDetails() {
   const [favorite, setIsFavorite] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [notification, setNotification] = useState<React.ReactNode | undefined>(
+    undefined
+  );
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
@@ -69,7 +74,7 @@ export default function AddressDetails() {
   });
 
   useEffect(() => {
-    if (data) {
+    if (data?.data?.addressDetails) {
       const details = data.data.addressDetails;
       setAddress(details.address);
       setHouseDetails(details.houseDetails);
@@ -79,6 +84,7 @@ export default function AddressDetails() {
       setIsFavorite(details.favorite);
     }
   }, [data]);
+  
 
   const mutation = useMutation({
     mutationFn: (newData: UpdateAddressData) => updateAddress(id, newData),
@@ -86,9 +92,33 @@ export default function AddressDetails() {
       queryClient.invalidateQueries({
         queryKey: ["addressDetails", id as string],
       });
-      alert("Address updated successfully!");
+      setNotification(
+        <Notification status="success" message="address updated successfully" />
+      );
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteAddress(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["addressDetails", id] });
+      setNotification(
+        <Notification status="success" message="Address deleted successfully" />
+      );
+      setTimeout(() => {
+        router.push("/addresses");
+      }, 5000);
+    },
+    onError: () => {
+      setNotification(
+        <Notification status="error" message="Failed to delete address" />
+      );
+    },
+  });
+
+  const handleAddressDelete = () => {
+    deleteMutation.mutate();
+  };
 
   const handleMapSearch = (query: string) => {
     fetch(
@@ -183,26 +213,22 @@ export default function AddressDetails() {
       coordinates,
       favorite,
     });
-    router.push("/addresses");
+    setNotification(
+      <Notification status="success" message="address updated successfully" />
+    );
+    setTimeout(() => {
+      router.push("/addresses");
+    }, 5000);
   };
 
   const toggleFavorite = () => setIsFavorite(!favorite);
 
-  if (status === "pending")
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Loading...
-      </div>
-    );
-  if (status === "error")
-    return (
-      <div className="flex justify-center items-center h-screen text-red-600">
-        Error fetching address details.
-      </div>
-    );
+  if (status === "pending") return <Loading />;
+  if (status === "error") notFound();
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {notification}
       <Card className="w-full max-w-4xl mx-auto bg-white shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-red-600 flex items-center">
@@ -213,35 +239,35 @@ export default function AddressDetails() {
           <div className="relative">
             <div className="flex items-center space-x-2">
               <Input
-          type="text"
-          value={address}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setAddress(e.target.value);
-            setIsTyping(true);
-            handleMapSearch(e.target.value);
-          }}
-          placeholder="Search for an address"
-          className="flex-grow"
+                type="text"
+                value={address}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setAddress(e.target.value);
+                  setIsTyping(true);
+                  handleMapSearch(e.target.value);
+                }}
+                placeholder="Search for an address"
+                className="flex-grow"
               />
               <Button
-          onClick={() => handleMapSearch(address)}
-          variant="outline"
-          className="bg-red-600 text-white hover:bg-red-700"
+                onClick={() => handleMapSearch(address)}
+                variant="outline"
+                className="bg-red-600 text-white hover:bg-red-700"
               >
-          <Search className="w-4 h-4 mr-2" /> Search
+                <Search className="w-4 h-4 mr-2" /> Search
               </Button>
             </div>
             {suggestions.length > 0 && (
               <ul className="absolute z-10 mt-2 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-56 overflow-auto">
-          {suggestions.map((suggestion: Suggestion) => (
-            <li
-              key={suggestion.id}
-              className="p-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => handleSuggestionClick(suggestion)}
-            >
-              {suggestion.place_name}
-            </li>
-          ))}
+                {suggestions.map((suggestion: Suggestion) => (
+                  <li
+                    key={suggestion.id}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion.place_name}
+                  </li>
+                ))}
               </ul>
             )}
           </div>
@@ -255,19 +281,24 @@ export default function AddressDetails() {
             <Input
               type="text"
               value={street}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStreet(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setStreet(e.target.value)
+              }
               placeholder="Street name"
               className="flex-grow"
             />
-            <Select value={addressType} onValueChange={(value: string) => setAddressType(value)}>
+            <Select
+              value={addressType}
+              onValueChange={(value: string) => setAddressType(value)}
+            >
               <SelectTrigger>
-          <SelectValue placeholder="Address type" />
+                <SelectValue placeholder="Address type" />
               </SelectTrigger>
               <SelectContent>
-          <SelectItem value="home">Home</SelectItem>
-          <SelectItem value="office">Office</SelectItem>
-          <SelectItem value="friends">Friends</SelectItem>
-          <SelectItem value="family">Family</SelectItem>
+                <SelectItem value="home">Home</SelectItem>
+                <SelectItem value="office">Office</SelectItem>
+                <SelectItem value="friends">Friends</SelectItem>
+                <SelectItem value="family">Family</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -275,12 +306,14 @@ export default function AddressDetails() {
           <Input
             type="text"
             value={houseDetails}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHouseDetails(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setHouseDetails(e.target.value)
+            }
             placeholder="House details (e.g. flat, apartment)"
             className="flex-grow"
           />
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex justify-between gap-5 flex-col md:flex-row">
           <Button
             onClick={toggleFavorite}
             variant={favorite ? "default" : "outline"}
@@ -293,12 +326,21 @@ export default function AddressDetails() {
             />
             {favorite ? "Favorited" : "Add to Favorites"}
           </Button>
+          <div className="flex justify-between mt-13 gap-10">
+          <Button
+            onClick={handleAddressDelete}
+            variant="outline"
+            className="bg-red-600 text-white hover:bg-red-700"
+          >
+            Delete Address
+          </Button>
           <Button
             onClick={handleAddressUpdate}
             className="bg-black text-white hover:bg-green-700"
           >
             Update Address
           </Button>
+          </div>
         </CardFooter>
       </Card>
     </div>

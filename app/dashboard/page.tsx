@@ -11,6 +11,7 @@ import getToken from "../utils/getToken";
 import { jwtDecode } from "jwt-decode";
 import { useRouter } from "next/navigation";
 import ShowAddressSelector from "./ShowAddressSelector";
+import Loading from '../utils/Loading'
 
 interface Address {
   data: string;
@@ -18,6 +19,7 @@ interface Address {
 
 export default function Home() {
   const [currentImage, setCurrentImage] = useState(0);
+  const [ loadingPage, setLoadingPage] = useState(true);
   const [showLocationPopup, setShowLocationPopup] = useState(false);
 
   const router = useRouter();
@@ -32,7 +34,7 @@ export default function Home() {
       if (decodedToken.exp && decodedToken.exp < currentTime) {
         router.push("/login");
       } else {
-        console.log("Token is valid");
+        setLoadingPage(false);
       }
     } else router.push("/login");
   }, []);
@@ -64,6 +66,7 @@ export default function Home() {
   }, []);
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {loadingPage && <Loading />}
       <header className="bg-white text-red-600 py-4 shadow-md">
         <div className="container mx-auto px-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Opta Express</h1>

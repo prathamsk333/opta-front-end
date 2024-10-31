@@ -2,13 +2,16 @@ import getToken from "./getToken";
 
 export async function signUpPOST(credentials) {
   try {
-    const response = await fetch("https://optaend.prathamsk.me/api/v1/users/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(credentials),
-    });
+    const response = await fetch(
+      "https://optaend.prathamsk.me/api/v1/users/signup",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(credentials),
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -26,13 +29,16 @@ export async function signUpPOST(credentials) {
 }
 
 export async function loginPOST(credentials) {
-  const response = await fetch("https://optaend.prathamsk.me/api/v1/users/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(credentials),
-  });
+  const response = await fetch(
+    "https://optaend.prathamsk.me/api/v1/users/login",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(credentials),
+    }
+  );
 
   if (!response.ok) {
     const errorInfo = await response.json();
@@ -88,69 +94,69 @@ export async function saveAddress(data) {
 }
 
 export async function getCurrentAddress() {
-    const token = getToken();
-    let auth;
-    if (token) {
-      auth = `Bearer ${token}`;
-    } else {
-      auth = " ";
+  const token = getToken();
+  let auth;
+  if (token) {
+    auth = `Bearer ${token}`;
+  } else {
+    auth = " ";
+  }
+
+  const response = await fetch(
+    `https://optaend.prathamsk.me/api/v1/address/getCurrentAddress`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${auth}`,
+      },
+      credentials: "include",
     }
+  );
 
-    const response = await fetch(
-      `https://optaend.prathamsk.me/api/v1/address/getCurrentAddress`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${auth}`,
-        },
-        credentials: "include",
-      }
-    );
+  if (!response.ok) {
+    const errorInfo = await response.json();
+    const error = new Error("An error occurred while fetching bookings");
+    error.status = response.status;
+    error.info = errorInfo;
+    throw error;
+  }
+  const result = await response.json();
 
-    if (!response.ok) {
-      const errorInfo = await response.json();
-      const error = new Error("An error occurred while fetching bookings");
-      error.status = response.status;
-      error.info = errorInfo;
-      throw error;
-    }
-    const result = await response.json();
-
-    return result;
+  return result;
 }
 
 export async function fetchSavedLocations() {
-    const token = getToken();
-    let auth;
-    if (token) {
-      auth = `Bearer ${token}`;
-    } else {
-      auth = " ";
+  const token = getToken();
+  let auth;
+  if (token) {
+    auth = `Bearer ${token}`;
+  } else {
+    auth = " ";
+  }
+
+  const response = await fetch(
+    `https://optaend.prathamsk.me/api/v1/address/getSavedAddresses`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `${auth}`,
+      },
+      credentials: "include",
     }
+  );
 
-    const response = await fetch(
-      `https://optaend.prathamsk.me/api/v1/address/getSavedAddresses`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${auth}`,
-        },
-        credentials: "include",
-      }
-    );
+  if (!response.ok) {
+    const errorInfo = await response.json();
+    const error = new Error("An error occurred while fetching bookings");
+    error.status = response.status;
+    error.info = errorInfo;
+    throw error;
+  }
+  const result = await response.json();
 
-    if (!response.ok) {
-      const errorInfo = await response.json();
-      const error = new Error("An error occurred while fetching bookings");
-      error.status = response.status;
-      error.info = errorInfo;
-      throw error;
-    }
-    const result = await response.json();
-
-    return result;
+  return result;
 }
 
 export async function getAddressDetails(id) {
@@ -220,6 +226,42 @@ export async function updateAddress(id, data) {
     return result;
   } catch (error) {
     console.error("Error during address update:", error);
+    throw error;
+  }
+}
+export async function deleteAddress(id) {
+  try {
+    const token = getToken();
+    let auth;
+    if (token) {
+      auth = `Bearer ${token}`;
+    } else {
+      auth = " ";
+    }
+
+    const response = await fetch(
+      `https://optaend.prathamsk.me/api/v1/address/deleteAddress/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${auth}`,
+        },
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      const errorInfo = await response.json();
+      const error = new Error("An error occurred while deleting the address");
+      error.status = response.status;
+      error.info = errorInfo;
+      throw error;
+    }
+
+    return { message: "Address deleted successfully" };
+  } catch (error) {
+    console.error("Error during address deletion:", error);
     throw error;
   }
 }
