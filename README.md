@@ -1,4 +1,5 @@
 ## Getting Started
+site is live at : https://opta.prathamsk.me
 
 First, run the development server:
 
